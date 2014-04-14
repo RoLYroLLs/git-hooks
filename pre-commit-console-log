@@ -1,0 +1,43 @@
+#!/bin/sh
+ 
+# Don't allow console.log() statements to be committed.
+
+if git-rev-parse --verify HEAD >/dev/null 2>&1; then
+	against=HEAD
+else
+	against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+fi
+
+FILES_PATTERN='\*?$'
+FORBIDDEN_WORDS=( 'console.log' )
+
+EXIT_CODE=0
+
+ORIGINALIFS=$IFS
+IFS=$'\n'
+
+echo
+
+for FORBIDDEN_WORD in "${FORBIDDEN_WORDS[@]}" ; do
+	EXIT_CODE_WORD=0
+	for FILE in `git diff-index --cached --name-status $against -- | cut -c3- | grep -E $FILES_PATTERN` ; do
+		if grep -i "$FORBIDDEN_WORD" $FILE > /dev/null
+		then
+			echo "The file *$FILE* contains *$FORBIDDEN_WORD*"
+
+			EXIT_CODE=1
+			EXIT_CODE_WORD=1
+		fi
+	done
+
+	if [ "$EXIT_CODE_WORD" != "0" ] ; then
+		echo
+		echo "Please remove all instanses of *$FORBIDDEN_WORD* before committing"
+		echo
+	fi
+
+done
+
+IFS=$ORIGINALIFS
+
+exit $EXIT_CODE

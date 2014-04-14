@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# This pre-push hook will prevent any push to forbidden branches
+# (by default, "staging" and "production").
+# Put this file in your local repo, in the .git/hooks folder
+# and make sure it is executable.
+# The name of the file *must* be "pre-push" for Git to pick it up.
+
+FORBIDDEN_BRANCHES=( 'master' 'staging' 'staging-azure' 'staging-onsite' 'production' 'production-azure' 'production-onsite' )
+
+CURRENT_BRANCH=$(git branch | grep "*" | sed "s/* //")
+
+for BRANCH in "${FORBIDDEN_BRANCHES[@]}"
+do
+	if [ "$BRANCH" == "$CURRENT_BRANCH" ]
+	then
+		echo
+		echo "You are trying to push the *$CURRENT_BRANCH* branch."
+		echo
+		echo "Pushing the *$CURRENT_BRANCH* branch is prohibited."
+		echo
+
+		exit 1
+	fi
+done

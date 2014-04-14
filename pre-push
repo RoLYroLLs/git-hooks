@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# Git pre-push hook that runs multiple hooks specified in $HOOKS.
+# Make sure this script is executable.
+
+
+###########################################################
+# SETTINGS:
+# pre-push hooks to be executed. They should be in the same .git/hooks/ folder
+# as this script. Hooks should return 0 if successful and nonzero to cancel the
+# push. They are executed in the order in which they are listed.
+#HOOKS="pre-push-default pre-push-compile pre-push-uncrustify"
+
+HOOKS="pre-push-prevent-branches"
+
+###########################################################
+# There should be no need to change anything below this line.
+
+source "$(dirname "$0")"/"canonicalize_filename.sh"
+
+# exit on error
+set -e
+
+# Absolute path to this script, e.g. /home/user/bin/foo.sh
+SCRIPT="$(canonicalize_filename "$0")"
+
+# Absolute path this script is in, thus /home/user/bin
+SCRIPTPATH="$(dirname "$SCRIPT")"
+
+for hook in $HOOKS
+do
+    echo "Running hook: $hook"
+    # run hook if it exists
+    # if it returns with nonzero exit with 1 and thus abort the push
+    if [ -f "$SCRIPTPATH/$hook" ]; then
+        "$SCRIPTPATH/$hook"
+        if [ $? != 0 ]; then
+            exit 1
+        fi
+    else
+        echo "Error: file $hook not found."
+        echo "Aborting push. Make sure the hook is in $SCRIPTPATH and executable."
+        echo "You can disable it by removing it from the list in $SCRIPT."
+        exit 1
+    fi
+done

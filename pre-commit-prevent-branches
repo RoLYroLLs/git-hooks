@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# This pre-commit hook will prevent any commit to forbidden branches
+# (by default, "staging" and "production").
+# Put this file in your local repo, in the .git/hooks folder
+# and make sure it is executable.
+# The name of the file *must* be "pre-commit" for Git to pick it up.
+
+FORBIDDEN_BRANCHES=( 'master' 'staging' 'staging-azure' 'staging-onsite' 'production' 'production-azure' 'production-onsite' )
+
+CURRENT_BRANCH=$(git branch | grep "*" | sed "s/* //")
+
+for BRANCH in "${FORBIDDEN_BRANCHES[@]}"
+do
+	if [ "$BRANCH" == "$CURRENT_BRANCH" ]
+	then
+		echo
+		echo "You are trying to commit on the *$CURRENT_BRANCH* branch."
+		echo
+		echo "Commiting on the *$CURRENT_BRANCH* branch is prohibited."
+		echo
+		echo "Please create a separate branch and commit your changes there."
+		echo
+
+		exit 1
+	fi
+done
